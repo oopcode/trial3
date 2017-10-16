@@ -1,0 +1,8 @@
+hash: 31e01257e817d65415d3e0fcdd8eeacca6521f3b2eaf27bc77d652955cf63ae3
+updated: 2017-10-14T20:07:35.272404969+03:00
+imports:
+- name: github.com/lucasjones/reggen
+  version: bed4659921747845e0ff3be0d18a66778c87edfc
+- name: github.com/streadway/amqp
+  version: 7db842394ca79f338f781d47bc59115f44adb20b
+testImports: []
