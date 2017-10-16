@@ -25,7 +25,7 @@ var (
 	EventCodePattern   = "[A-Za-z0-9]{1,255}"
 	EmailPattern       = `(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)`
 	StreamTypes        = []string{"email", "sms", "push"}
-	PhonePattern       = "+7-[0-9]{3}-[0-9]{3}-[0-9]{2}-[0-9]{2}"
+	PhonePattern       = `\+7-[0-9]{3}-[0-9]{3}-[0-9]{2}-[0-9]{2}`
 	PushPattern        = "[A-Za-z0-9]{12}"
 )
 
@@ -111,7 +111,7 @@ func consume(msgs <-chan amqp.Delivery, db *sql.DB, wg *sync.WaitGroup) {
 		json.Unmarshal(bMsg.Body, msg)
 
 		if err := msg.validate(); err != nil {
-			log.Printf("Invalid message: %s", err)
+			log.Printf("Invalid message %s: %s", msg.AccessToken, err)
 			continue
 		}
 
@@ -177,15 +177,15 @@ func (m *Message) validate() error {
 	switch m.StreamType {
 	case "email":
 		if ok, _ := regexp.MatchString(EmailPattern, toVal); !ok {
-			return fmt.Errorf("invalid event_code: %s", toVal)
+			return fmt.Errorf("invalid email: %s", toVal)
 		}
 	case "sms":
 		if ok, _ := regexp.MatchString(PhonePattern, toVal); !ok {
-			return fmt.Errorf("invalid event_code: %s", toVal)
+			return fmt.Errorf("invalid phone number: %s", toVal)
 		}
 	case "push":
 		if ok, _ := regexp.MatchString(PushPattern, toVal); !ok {
-			return fmt.Errorf("invalid event_code: %s", toVal)
+			return fmt.Errorf("invalid push ID: %s", toVal)
 		}
 	}
 

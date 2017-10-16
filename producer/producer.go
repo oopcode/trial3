@@ -21,7 +21,7 @@ var (
 	EventCodePattern   = "[A-Za-z0-9]{1,255}"
 	EmailPattern       = `(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)`
 	StreamTypes        = []string{"email", "sms", "push"}
-	PhonePattern       = "+7-[0-9]{3}-[0-9]{3}-[0-9]{2}-[0-9]{2}"
+	PhonePattern       = `\+7-[0-9]{3}-[0-9]{3}-[0-9]{2}-[0-9]{2}`
 	PushPattern        = "[A-Za-z0-9]{12}"
 )
 
