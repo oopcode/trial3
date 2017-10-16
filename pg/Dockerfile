@@ -29,15 +29,12 @@ RUN    /etc/init.d/postgresql start &&\
     psql --command "CREATE TABLE trial3 (id INT PRIMARY KEY NOT NULL, access_token char[36], event_code TEXT NOT NULL, stream_type TEXT NOT NULL, data JSON);"
 
 
-# Adjust PostgreSQL configuration so that remote connections to the
-# database are possible.
+## Adjust PostgreSQL configuration so that remote connections to the
+## database are possible.
 RUN echo "host all all 0.0.0.0/0  md5" >> /etc/postgresql/9.3/main/pg_hba.conf
 
-# And add ``listen_addresses`` to ``/etc/postgresql/9.3/main/postgresql.conf``
+## And add ``listen_addresses`` to ``/etc/postgresql/9.3/main/postgresql.conf``
 RUN echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
-
-# Expose the PostgreSQL port
-EXPOSE 5432
 
 # Add VOLUMEs to allow backup of config, logs and databases
 VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]

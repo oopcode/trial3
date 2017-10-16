@@ -1,6 +1,14 @@
 version: '3'
 
 services:
+  pg:
+    build:
+      context: pg
+      dockerfile: Dockerfile
+    ports:
+      - "5432:5432"
+    restart: always
+
   rabbit:
     image: "rabbitmq"
     ports:
@@ -13,9 +21,9 @@ services:
     depends_on:
           - "rabbit"
 
-  consumer:
-      build:
-        context: ./consumer
-        dockerfile: Dockerfile
-      depends_on:
-            - "rabbit"
+#  consumer:
+#      build:
+#        context: ./consumer
+#        dockerfile: Dockerfile
+#      depends_on:
+#            - "rabbit"

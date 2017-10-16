@@ -54,8 +54,6 @@ func (p *Producer) Run() error {
 	}
 	defer ch.Close()
 
-	log.Println(1)
-
 	q, err := ch.QueueDeclare(
 		p.routingKey,
 		false,
