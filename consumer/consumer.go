@@ -116,8 +116,6 @@ func consume(msgs <-chan amqp.Delivery, db *sql.DB) {
 			continue
 		}
 
-		log.Println(string(data))
-
 		var insertID int
 		err = db.QueryRow("INSERT INTO trial3(access_token, event_code, stream_type, sent_to, msg_data) VALUES($1,$2,$3,$4,$5) returning id;",
 			inMsg.AccessToken, inMsg.EventCode, inMsg.StreamType, toVal, string(data)).Scan(&insertID)

@@ -24,7 +24,7 @@ USER postgres
 RUN    /etc/init.d/postgresql start &&\
     psql --command "CREATE USER trial3 WITH SUPERUSER PASSWORD 'trial3';" &&\
     createdb -O trial3 trial3 &&\
-    psql -d trial3 --command "CREATE TABLE trial3 (id SERIAL PRIMARY KEY, access_token char[36], event_code TEXT NOT NULL, stream_type TEXT NOT NULL, sent_to TEXT NOT NULL, msg_data JSON);"
+    psql -d trial3 --command "CREATE TABLE trial3 (id SERIAL PRIMARY KEY, access_token TEXT NOT NULL, event_code TEXT NOT NULL, stream_type TEXT NOT NULL, sent_to TEXT NOT NULL, msg_data JSON);"
 
 
 ## Adjust PostgreSQL configuration so that remote connections to the
