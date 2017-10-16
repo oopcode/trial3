@@ -5,11 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"time"
-
 	"regexp"
-
 	"sync"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/streadway/amqp"
