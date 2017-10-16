@@ -13,6 +13,7 @@ services:
     image: "rabbitmq"
     ports:
      - "5672:5672"
+    restart: always
 
   producer:
     build:
@@ -20,10 +21,12 @@ services:
       dockerfile: Dockerfile
     depends_on:
           - "rabbit"
+    restart: always
 
-#  consumer:
-#      build:
-#        context: ./consumer
-#        dockerfile: Dockerfile
-#      depends_on:
-#            - "rabbit"
+  consumer:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    depends_on:
+          - "rabbit"
+    restart: always

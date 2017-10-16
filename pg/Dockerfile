@@ -26,16 +26,14 @@ RUN    /etc/init.d/postgresql start &&\
     createdb -O trial3 trial3 &&\
     psql -d trial3 --command "CREATE TABLE trial3 (id SERIAL PRIMARY KEY, access_token TEXT NOT NULL, event_code TEXT NOT NULL, stream_type TEXT NOT NULL, sent_to TEXT NOT NULL, msg_data JSON);"
 
-
-## Adjust PostgreSQL configuration so that remote connections to the
-## database are possible.
+## Adjust PostgreSQL configuration so that remote connections to the database are possible.
 RUN echo "host all all 0.0.0.0/0  md5" >> /etc/postgresql/9.3/main/pg_hba.conf
 
-## And add ``listen_addresses`` to ``/etc/postgresql/9.3/main/postgresql.conf``
+## And add ``listen_addresses`` to ``/etc/postgresql/9.3/main/postgresql.conf``.
 RUN echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
 
-# Add VOLUMEs to allow backup of config, logs and databases
+# Add VOLUMEs to allow backup of config, logs and databases.
 VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 
-# Set the default command to run when starting the container
+# Set the default command to run when starting the container.
 CMD ["/usr/lib/postgresql/9.3/bin/postgres", "-D", "/var/lib/postgresql/9.3/main", "-c", "config_file=/etc/postgresql/9.3/main/postgresql.conf"]

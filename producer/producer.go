@@ -42,9 +42,16 @@ func NewProducer(addr, routingKey string) *Producer {
 }
 
 func (p *Producer) Run() error {
-	conn, err := getConnection(time.Minute, time.Second)
+	var (
+		err  error
+		conn *amqp.Connection
+	)
+	err = retry(time.Minute, time.Second, func() error {
+		conn, err = amqp.Dial(RMQAddr)
+		return err
+	})
 	if err != nil {
-		return fmt.Errorf("failed to connect to RabbitMQ: %s", err)
+		log.Panicf("failed to connect to RabbitMQ: %s", err)
 	}
 	defer conn.Close()
 
@@ -85,7 +92,7 @@ func (p *Producer) Run() error {
 			log.Printf("Failed to publish message %+v: %s", msg, err)
 		}
 
-		log.Printf("> Produced message %s", msg.AccessToken)
+		log.Printf("Produced message %s", msg.AccessToken)
 		time.Sleep(time.Second)
 	}
 
@@ -134,20 +141,21 @@ func NewMessage() *Message {
 	}
 }
 
-func getConnection(duration time.Duration, sleep time.Duration) (connection *amqp.Connection, err error) {
+func retry(duration time.Duration, sleep time.Duration, cb func() error) error {
 	var (
 		t0 = time.Now()
 		i  = 0
 	)
 	for {
 		i++
-		conn, err := amqp.Dial(RMQAddr)
+		err := cb()
 		if err == nil {
-			return conn, nil
+			return nil
 		}
+
 		delta := time.Now().Sub(t0)
 		if delta > duration {
-			return nil, fmt.Errorf("after %d attempts (during %s), last error: %s", i, delta, err)
+			return fmt.Errorf("after %d attempts (during %s), last error: %s", i, delta, err)
 		}
 
 		time.Sleep(sleep)
