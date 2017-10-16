@@ -23,55 +23,53 @@ const (
 func main() {
 
 	var (
-		//err  error
-		//conn *amqp.Connection
-		db *sql.DB
+		err  error
+		conn *amqp.Connection
+		db   *sql.DB
 	)
 
-	getConnection := func(duration time.Duration, sleep time.Duration) (connection *amqp.Connection, err error) {
-		var (
-			t0 = time.Now()
-			i  = 0
-		)
-		for {
-			i++
-			conn, err := amqp.Dial(RMQAddr)
-			if err == nil {
-				return conn, nil
-			}
-
-			delta := time.Now().Sub(t0)
-			if delta > duration {
-				return nil, fmt.Errorf("after %d attempts (during %s), last error: %s", i, delta, err)
-			}
-
-			time.Sleep(sleep)
-
-			log.Println("retrying after error:", err)
-		}
-	}
-
-	conn, err := getConnection(time.Minute, time.Second)
+	err = retry(time.Minute, time.Second, func() error {
+		cbConn, cbErr := amqp.Dial(RMQAddr)
+		conn = cbConn
+		return cbErr
+	})
 	if err != nil {
 		log.Panicf("failed to connect to RabbitMQ: %s", err)
 	}
 	defer conn.Close()
 
-	//err = retry(time.Minute, time.Second, func() error {
-	//	cbConn, cbErr := amqp.Dial(RMQAddr)
-	//	conn = cbConn
-	//	return cbErr
-	//})
-	//if err != nil {
-	//	log.Panicf("failed to connect to RabbitMQ: %s", err)
-	//}
-	//defer conn.Close()
-
 	log.Println("Connected to RabbitMQ")
 
-	msgs, err := getRMQDelivery(conn)
+	ch, err := conn.Channel()
 	if err != nil {
-		log.Panic(err)
+		log.Panicf("Failed to open a channel: %s", err)
+	}
+	defer ch.Close()
+
+	q, err := ch.QueueDeclare(
+		RoutingKey,
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+
+	if err != nil {
+		log.Panicf("Failed to declare queue %s: %s", RoutingKey, err)
+	}
+
+	msgs, err := ch.Consume(
+		q.Name,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		log.Panicf("Failed to register a consumer: %s", err)
 	}
 
 	err = retry(time.Minute, time.Second, func() error {
@@ -118,9 +116,11 @@ func consume(msgs <-chan amqp.Delivery, db *sql.DB) {
 			continue
 		}
 
+		log.Println(string(data))
+
 		var insertID int
-		err = db.QueryRow("INSERT INTO trial3 VALUES($1,$2,$3,$4,$5) returning uid;",
-			inMsg.AccessToken, inMsg.EventCode, inMsg.StreamType, toVal, data).Scan(&insertID)
+		err = db.QueryRow("INSERT INTO trial3(access_token, event_code, stream_type, sent_to, msg_data) VALUES($1,$2,$3,$4,$5) returning id;",
+			inMsg.AccessToken, inMsg.EventCode, inMsg.StreamType, toVal, string(data)).Scan(&insertID)
 		if err != nil {
 			log.Printf("Failed to store message %s: %s", inMsg.AccessToken, err)
 		}
@@ -132,42 +132,6 @@ type InMessage struct {
 	EventCode   string            `json:"event_code"`
 	StreamType  string            `json:"stream_type"`
 	Data        map[string]string `json:"data"`
-}
-
-func getRMQDelivery(conn *amqp.Connection) (<-chan amqp.Delivery, error) {
-	ch, err := conn.Channel()
-	if err != nil {
-		return nil, fmt.Errorf("failed to open a channel: %s", err)
-	}
-	defer ch.Close()
-
-	q, err := ch.QueueDeclare(
-		RoutingKey,
-		false,
-		false,
-		false,
-		false,
-		nil,
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to declare queue %s: %s", RoutingKey, err)
-	}
-
-	msgs, err := ch.Consume(
-		q.Name,
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to register a consumer: %s", err)
-	}
-
-	return msgs, nil
 }
 
 func retry(duration time.Duration, sleep time.Duration, cb func() error) error {
