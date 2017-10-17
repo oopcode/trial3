@@ -1,3 +1,7 @@
+## DESCRIPTION
+
+This project implements a producer of RMQ messages and a parallel consumer that stores received messages to PostrgeSQL.
+
 ## USAGE
 
 You need Docker and Docker-compose installed to run this example:
